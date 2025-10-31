@@ -5,6 +5,7 @@ import { parseRequestBody } from './utils.js';
 // Force Node.js runtime for Vercel
 export const config = {
   runtime: 'nodejs',
+  maxDuration: 60, // 60 seconds (increase if needed)
 };
 
 const imageModel = "gemini-2.5-flash-image";

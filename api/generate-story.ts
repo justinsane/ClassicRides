@@ -5,6 +5,7 @@ import { parseRequestBody } from './utils.js';
 // Force Node.js runtime for Vercel
 export const config = {
   runtime: 'nodejs',
+  maxDuration: 60, // 60 seconds (increase if needed)
 };
 
 const textModel = 'gemini-2.5-flash';
@@ -49,7 +50,7 @@ export default async function handler(req: Request) {
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
       },
@@ -88,7 +89,7 @@ export default async function handler(req: Request) {
         JSON.stringify({ error: 'API key is not configured' }),
         {
           status: 500,
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
           },
@@ -103,7 +104,7 @@ export default async function handler(req: Request) {
     const ai = new GoogleGenAI({ apiKey });
 
     console.log('[generate-story] Calling generateContent...');
-    const response = await ai.models.generateContent({
+    const geminiResponse = await ai.models.generateContent({
       model: textModel,
       contents: `Generate a story, fun facts, and an image prompt for this request: "${carPrompt}"`,
       config: {
@@ -115,22 +116,32 @@ export default async function handler(req: Request) {
     });
 
     console.log('[generate-story] Response received, parsing...');
-    const parsedResponse = JSON.parse(response.text);
+    const parsedResponse = JSON.parse(geminiResponse.text);
     console.log(
       '[generate-story] Success! Response keys:',
       Object.keys(parsedResponse)
     );
 
     console.log('[generate-story] Returning response...');
-    return new Response(JSON.stringify(parsedResponse), {
+    const responseBody = JSON.stringify(parsedResponse);
+    console.log('[generate-story] Response body length:', responseBody.length);
+
+    const httpResponse = new Response(responseBody, {
       status: 200,
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
+        'Content-Length': responseBody.length.toString(),
       },
     });
+
+    console.log(
+      '[generate-story] Response created, status:',
+      httpResponse.status
+    );
+    return httpResponse;
   } catch (err: any) {
     console.error('[generate-story] Error generating story:', {
       message: err.message,
@@ -138,19 +149,19 @@ export default async function handler(req: Request) {
       name: err.name,
       cause: err.cause,
     });
-      return new Response(
-        JSON.stringify({
-          error:
-            err.message ||
-            'Gramps is having a bit of engine trouble. Please try again.',
-        }),
-        {
-          status: 500,
-          headers: { 
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      );
+    return new Response(
+      JSON.stringify({
+        error:
+          err.message ||
+          'Gramps is having a bit of engine trouble. Please try again.',
+      }),
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      }
+    );
   }
 }

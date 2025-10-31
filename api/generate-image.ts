@@ -5,6 +5,7 @@ import { parseRequestBody } from './utils.js';
 // Force Node.js runtime for Vercel
 export const config = {
   runtime: 'nodejs',
+  maxDuration: 60, // 60 seconds (increase if needed)
 };
 
 const imageModel = "gemini-2.5-flash-image";
@@ -70,7 +71,7 @@ export default async function handler(req: Request) {
     const ai = new GoogleGenAI({ apiKey });
     
     console.log('[generate-image] Calling generateContent...');
-    const response = await ai.models.generateContent({
+    const geminiResponse = await ai.models.generateContent({
       model: imageModel,
       contents: { parts: [{ text: fullPrompt }] },
       config: {
@@ -80,26 +81,33 @@ export default async function handler(req: Request) {
 
     console.log('[generate-image] Response received, checking for image data...');
     console.log('[generate-image] Response structure:', {
-      hasCandidates: !!response.candidates,
-      candidatesLength: response.candidates?.length || 0,
-      hasContent: !!response.candidates?.[0]?.content,
-      partsLength: response.candidates?.[0]?.content?.parts?.length || 0,
+      hasCandidates: !!geminiResponse.candidates,
+      candidatesLength: geminiResponse.candidates?.length || 0,
+      hasContent: !!geminiResponse.candidates?.[0]?.content,
+      partsLength: geminiResponse.candidates?.[0]?.content?.parts?.length || 0,
     });
 
-    for (const part of response.candidates?.[0]?.content?.parts || []) {
+    for (const part of geminiResponse.candidates?.[0]?.content?.parts || []) {
       if (part.inlineData) {
         console.log('[generate-image] Found image data! Size:', part.inlineData.data?.length || 0);
         const imageData = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
         console.log('[generate-image] Returning response with image...');
-        return new Response(JSON.stringify({ imageUrl: imageData }), {
+        const responseBody = JSON.stringify({ imageUrl: imageData });
+        console.log('[generate-image] Response body length:', responseBody.length);
+        
+        const httpResponse = new Response(responseBody, {
           status: 200,
           headers: { 
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Methods': 'POST, OPTIONS',
             'Access-Control-Allow-Headers': 'Content-Type',
+            'Content-Length': responseBody.length.toString(),
           }
         });
+        
+        console.log('[generate-image] Response created, status:', httpResponse.status);
+        return httpResponse;
       }
     }
 
