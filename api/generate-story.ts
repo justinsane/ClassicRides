@@ -123,20 +123,15 @@ export default async function handler(req: Request) {
     );
 
     // Ensure all data is materialized before creating response
+    // CRITICAL: Vercel requires functions to return a STRING body, not Blob or other types
     const responseBody = JSON.stringify(parsedResponse);
     console.log(
       '[generate-story] Response body prepared, length:',
       responseBody.length
     );
 
-    // Convert to Blob to ensure proper handling by Vercel
-    const blob = new Blob([responseBody], {
-      type: 'application/json; charset=utf-8',
-    });
-    console.log('[generate-story] Blob created, size:', blob.size);
-
-    // Create response with Blob body
-    const httpResponse = new Response(blob, {
+    // Create response with STRING body (Vercel requirement per BODY_NOT_A_STRING_FROM_FUNCTION)
+    const httpResponse = new Response(responseBody, {
       status: 200,
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
@@ -146,8 +141,14 @@ export default async function handler(req: Request) {
       },
     });
 
-    console.log('[generate-story] Response created successfully');
-    console.log('[generate-story] Final log before return');
+    console.log(
+      '[generate-story] Response created successfully with string body'
+    );
+
+    // CRITICAL: Ensure response is fully materialized and return immediately
+    // Vercel Node.js runtime should handle Response objects automatically
+    // But we need to ensure no pending async operations
+    console.log('[generate-story] Final log before return - response ready');
 
     return httpResponse;
   } catch (err: any) {
