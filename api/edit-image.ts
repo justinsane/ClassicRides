@@ -1,5 +1,6 @@
 // @ts-ignore - Vercel will handle this dependency
 import { GoogleGenAI, Modality } from "@google/genai";
+import { parseRequestBody } from './utils';
 
 // Force Node.js runtime for Vercel
 export const config = {
@@ -28,7 +29,8 @@ export default async function handler(req: Request) {
   try {
     console.log('[edit-image] Request received:', { method: req.method, url: req.url });
     
-    const { base64Image, prompt } = await req.json();
+    const body = await parseRequestBody(req);
+    const { base64Image, prompt } = body;
     console.log('[edit-image] Prompt:', prompt?.substring(0, 100));
     console.log('[edit-image] Image data length:', base64Image?.length || 0);
 

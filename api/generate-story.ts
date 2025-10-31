@@ -1,5 +1,6 @@
 // @ts-ignore - Vercel will handle this dependency
 import { GoogleGenAI, Type } from '@google/genai';
+import { parseRequestBody } from './utils';
 
 // Force Node.js runtime for Vercel
 export const config = {
@@ -46,7 +47,8 @@ export default async function handler(req: Request) {
       url: req.url,
     });
 
-    const { carPrompt } = await req.json();
+    const body = await parseRequestBody(req);
+    const { carPrompt } = body;
     console.log('[generate-story] Car prompt:', carPrompt?.substring(0, 50));
 
     if (!carPrompt) {
