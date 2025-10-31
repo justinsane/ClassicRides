@@ -122,25 +122,33 @@ export default async function handler(req: Request) {
       Object.keys(parsedResponse)
     );
 
-    console.log('[generate-story] Returning response...');
+    // Ensure all data is materialized before creating response
     const responseBody = JSON.stringify(parsedResponse);
-    console.log('[generate-story] Response body length:', responseBody.length);
+    console.log(
+      '[generate-story] Response body prepared, length:',
+      responseBody.length
+    );
 
-    const httpResponse = new Response(responseBody, {
+    // Convert to Blob to ensure proper handling by Vercel
+    const blob = new Blob([responseBody], {
+      type: 'application/json; charset=utf-8',
+    });
+    console.log('[generate-story] Blob created, size:', blob.size);
+
+    // Create response with Blob body
+    const httpResponse = new Response(blob, {
       status: 200,
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json; charset=utf-8',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
-        'Content-Length': responseBody.length.toString(),
       },
     });
 
-    console.log(
-      '[generate-story] Response created, status:',
-      httpResponse.status
-    );
+    console.log('[generate-story] Response created successfully');
+    console.log('[generate-story] Final log before return');
+
     return httpResponse;
   } catch (err: any) {
     console.error('[generate-story] Error generating story:', {
