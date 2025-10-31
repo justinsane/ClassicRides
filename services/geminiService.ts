@@ -44,13 +44,17 @@ export async function generateImage(prompt: string): Promise<string> {
     const url = `${API_BASE}/generate-image`;
     console.log('[client] Fetch URL:', url);
     
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+    
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ prompt }),
-    });
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeoutId));
 
     console.log('[client] Response status:', response.status, response.statusText);
     

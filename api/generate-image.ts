@@ -10,10 +10,25 @@ export const config = {
 const imageModel = "gemini-2.5-flash-image";
 
 export default async function handler(req: Request) {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      },
+    });
+  }
+
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      }
     });
   }
 
@@ -75,9 +90,15 @@ export default async function handler(req: Request) {
       if (part.inlineData) {
         console.log('[generate-image] Found image data! Size:', part.inlineData.data?.length || 0);
         const imageData = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+        console.log('[generate-image] Returning response with image...');
         return new Response(JSON.stringify({ imageUrl: imageData }), {
           status: 200,
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type',
+          }
         });
       }
     }
@@ -85,7 +106,10 @@ export default async function handler(req: Request) {
     console.error('[generate-image] No image data found in response');
     return new Response(JSON.stringify({ error: 'No image data found in response' }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      }
     });
   } catch (err: any) {
     console.error("[generate-image] Error generating image:", {
@@ -98,7 +122,10 @@ export default async function handler(req: Request) {
       error: err.message || "The old camera seems to be on the fritz. Couldn't get a picture." 
     }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      }
     });
   }
 }

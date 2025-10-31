@@ -34,10 +34,25 @@ const storySchema = {
 };
 
 export default async function handler(req: Request) {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      },
+    });
+  }
+
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
     });
   }
 
@@ -73,7 +88,10 @@ export default async function handler(req: Request) {
         JSON.stringify({ error: 'API key is not configured' }),
         {
           status: 500,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
         }
       );
     }
@@ -103,9 +121,15 @@ export default async function handler(req: Request) {
       Object.keys(parsedResponse)
     );
 
+    console.log('[generate-story] Returning response...');
     return new Response(JSON.stringify(parsedResponse), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      },
     });
   } catch (err: any) {
     console.error('[generate-story] Error generating story:', {
@@ -114,16 +138,19 @@ export default async function handler(req: Request) {
       name: err.name,
       cause: err.cause,
     });
-    return new Response(
-      JSON.stringify({
-        error:
-          err.message ||
-          'Gramps is having a bit of engine trouble. Please try again.',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+      return new Response(
+        JSON.stringify({
+          error:
+            err.message ||
+            'Gramps is having a bit of engine trouble. Please try again.',
+        }),
+        {
+          status: 500,
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        }
+      );
   }
 }
