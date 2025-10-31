@@ -4,7 +4,16 @@ export const config = {
 };
 
 export default async function handler(req: Request) {
+  // Allow GET requests for health check
+  if (req.method && req.method !== 'GET' && req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   try {
+    console.log('[health] Request received:', { method: req.method, url: req.url });
     const apiKey = process.env.GEMINI_API_KEY;
     
     return new Response(
