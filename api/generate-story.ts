@@ -1,6 +1,6 @@
 // @ts-ignore - Vercel will handle this dependency
 import { GoogleGenAI, Type } from '@google/genai';
-import { parseRequestBody } from './utils';
+import { parseRequestBody } from './utils.js';
 
 // Force Node.js runtime for Vercel
 export const config = {
