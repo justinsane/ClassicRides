@@ -80,6 +80,11 @@ const App: React.FC = () => {
             playHorn();
             setUserInput('');
         } catch (err: any) {
+            console.error('[App] Error in handleNewMemory:', {
+                message: err.message,
+                name: err.name,
+                stack: err.stack,
+            });
             setError(err.message || 'An unknown error occurred.');
         } finally {
             setIsLoading(false);
@@ -100,6 +105,11 @@ const App: React.FC = () => {
             playHorn();
             setEditPrompt('');
         } catch (err: any) {
+            console.error('[App] Error in handleEditImage:', {
+                message: err.message,
+                name: err.name,
+                stack: err.stack,
+            });
             setError(err.message || 'An unknown error occurred.');
         } finally {
             setIsLoading(false);

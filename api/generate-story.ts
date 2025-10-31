@@ -1,6 +1,11 @@
 // @ts-ignore - Vercel will handle this dependency
 import { GoogleGenAI, Type } from '@google/genai';
 
+// Force Node.js runtime for Vercel
+export const config = {
+  runtime: 'nodejs',
+};
+
 const textModel = 'gemini-2.5-flash';
 
 const storySchema = {
@@ -36,9 +41,16 @@ export default async function handler(req: Request) {
   }
 
   try {
+    console.log('[generate-story] Request received:', {
+      method: req.method,
+      url: req.url,
+    });
+
     const { carPrompt } = await req.json();
+    console.log('[generate-story] Car prompt:', carPrompt?.substring(0, 50));
 
     if (!carPrompt) {
+      console.error('[generate-story] Missing carPrompt');
       return new Response(JSON.stringify({ error: 'carPrompt is required' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
@@ -47,7 +59,14 @@ export default async function handler(req: Request) {
 
     // @ts-ignore - process is available in Vercel serverless functions
     const apiKey = process.env.GEMINI_API_KEY;
+    console.log('[generate-story] API key check:', {
+      hasKey: !!apiKey,
+      keyLength: apiKey?.length || 0,
+      keyPrefix: apiKey ? `${apiKey.substring(0, 4)}...` : 'none',
+    });
+
     if (!apiKey) {
+      console.error('[generate-story] API key is missing');
       return new Response(
         JSON.stringify({ error: 'API key is not configured' }),
         {
@@ -57,7 +76,13 @@ export default async function handler(req: Request) {
       );
     }
 
+    console.log(
+      '[generate-story] Initializing GoogleGenAI with model:',
+      textModel
+    );
     const ai = new GoogleGenAI({ apiKey });
+
+    console.log('[generate-story] Calling generateContent...');
     const response = await ai.models.generateContent({
       model: textModel,
       contents: `Generate a story, fun facts, and an image prompt for this request: "${carPrompt}"`,
@@ -69,14 +94,24 @@ export default async function handler(req: Request) {
       },
     });
 
+    console.log('[generate-story] Response received, parsing...');
     const parsedResponse = JSON.parse(response.text);
+    console.log(
+      '[generate-story] Success! Response keys:',
+      Object.keys(parsedResponse)
+    );
 
     return new Response(JSON.stringify(parsedResponse), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (err: any) {
-    console.error('Error generating story:', err);
+    console.error('[generate-story] Error generating story:', {
+      message: err.message,
+      stack: err.stack,
+      name: err.name,
+      cause: err.cause,
+    });
     return new Response(
       JSON.stringify({
         error:
