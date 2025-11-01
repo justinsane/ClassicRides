@@ -11,9 +11,11 @@
     ],
     "skipLibCheck": true,
     "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
     "moduleDetection": "force",
     "allowJs": true,
+    "noErrorTruncation": false,
     "jsx": "react-jsx",
     "paths": {
       "@/*": [
