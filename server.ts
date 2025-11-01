@@ -1,6 +1,7 @@
 import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { existsSync } from 'fs';
 import generateStoryHandler from './api/generate-story.ts';
 import generateImageHandler from './api/generate-image.ts';
 import editImageHandler from './api/edit-image.ts';
@@ -15,6 +16,12 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Request logging
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+  next();
+});
 
 // API Routes
 app.post('/api/generate-story', async (req, res) => {
@@ -85,10 +92,30 @@ app.use(express.static(join(__dirname, 'dist')));
 
 // Catch-all handler: send back React's index.html file for any non-API routes
 app.get('*', (req, res) => {
-  res.sendFile(join(__dirname, 'dist', 'index.html'));
+  const indexPath = join(__dirname, 'dist', 'index.html');
+  console.log(`[server] Serving index.html from: ${indexPath}`);
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      console.error('[server] Error serving index.html:', err);
+      res.status(500).send('Error serving application');
+    }
+  });
+});
+
+// Error handler (must be last)
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('[server] Unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error', message: err.message });
 });
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`Static files from: ${join(__dirname, 'dist')}`);
+  
+  // Check if dist directory exists
+  const distPath = join(__dirname, 'dist');
+  const indexPath = join(distPath, 'index.html');
+  console.log(`Dist exists: ${existsSync(distPath)}`);
+  console.log(`Index.html exists: ${existsSync(indexPath)}`);
 });
 
