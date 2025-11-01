@@ -1,8 +1,4 @@
 // Health check endpoint to verify API key is accessible
-export const config = {
-  runtime: 'nodejs',
-};
-
 export default async function handler(req: Request) {
   // Allow GET requests for health check
   if (req.method && req.method !== 'GET' && req.method !== 'POST') {

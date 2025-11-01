@@ -1,12 +1,5 @@
-// @ts-ignore - Vercel will handle this dependency
 import { GoogleGenAI, Modality } from "@google/genai";
 import { parseRequestBody } from './utils.js';
-
-// Force Node.js runtime for Vercel
-export const config = {
-  runtime: 'nodejs',
-  maxDuration: 60, // 60 seconds (increase if needed)
-};
 
 const imageModel = "gemini-2.5-flash-image";
 
@@ -48,7 +41,6 @@ export default async function handler(req: Request) {
       });
     }
 
-    // @ts-ignore - process is available in Vercel serverless functions
     const apiKey = process.env.GEMINI_API_KEY;
     console.log('[generate-image] API key check:', { 
       hasKey: !!apiKey, 

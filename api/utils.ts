@@ -1,4 +1,4 @@
-// Utility function to safely parse request body in Vercel API routes
+// Utility function to safely parse request body in API routes
 export async function parseRequestBody(req: Request): Promise<any> {
   try {
     const reqAny = req as any;
@@ -12,7 +12,7 @@ export async function parseRequestBody(req: Request): Promise<any> {
       keys: Object.keys(reqAny).slice(0, 10), // Log first 10 keys
     });
     
-    // Check if body is already parsed (Express-style or Vercel wrapper)
+    // Check if body is already parsed (Express-style wrapper)
     if (reqAny.body !== undefined) {
       console.log('[utils] Using req.body (already parsed)');
       // If it's already an object/string, return it

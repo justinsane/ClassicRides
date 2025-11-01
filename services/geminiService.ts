@@ -1,4 +1,4 @@
-// Client-side service that calls Vercel API routes
+// Client-side service that calls API routes
 // API key is secured server-side in /api routes
 
 const API_BASE = import.meta.env.VITE_API_BASE || '/api';

@@ -1,12 +1,5 @@
-// @ts-ignore - Vercel will handle this dependency
 import { GoogleGenAI, Type } from '@google/genai';
 import { parseRequestBody } from './utils.js';
-
-// Force Node.js runtime for Vercel
-export const config = {
-  runtime: 'nodejs',
-  maxDuration: 60, // 60 seconds (increase if needed)
-};
 
 const textModel = 'gemini-2.5-flash';
 
@@ -75,7 +68,6 @@ export default async function handler(req: Request) {
       });
     }
 
-    // @ts-ignore - process is available in Vercel serverless functions
     const apiKey = process.env.GEMINI_API_KEY;
     console.log('[generate-story] API key check:', {
       hasKey: !!apiKey,
@@ -123,14 +115,13 @@ export default async function handler(req: Request) {
     );
 
     // Ensure all data is materialized before creating response
-    // CRITICAL: Vercel requires functions to return a STRING body, not Blob or other types
     const responseBody = JSON.stringify(parsedResponse);
     console.log(
       '[generate-story] Response body prepared, length:',
       responseBody.length
     );
 
-    // Create response with STRING body (Vercel requirement per BODY_NOT_A_STRING_FROM_FUNCTION)
+    // Create response with JSON body
     const httpResponse = new Response(responseBody, {
       status: 200,
       headers: {
@@ -145,9 +136,6 @@ export default async function handler(req: Request) {
       '[generate-story] Response created successfully with string body'
     );
 
-    // CRITICAL: Ensure response is fully materialized and return immediately
-    // Vercel Node.js runtime should handle Response objects automatically
-    // But we need to ensure no pending async operations
     console.log('[generate-story] Final log before return - response ready');
 
     return httpResponse;
