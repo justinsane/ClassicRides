@@ -88,12 +88,23 @@ app.get('/api/health', async (req, res) => {
 });
 
 // Serve static files from dist directory
-app.use(express.static(join(__dirname, 'dist')));
+const staticPath = join(__dirname, 'dist');
+app.use(express.static(staticPath, {
+  setHeaders: (res, path) => {
+    console.log(`[static] Serving: ${path}`);
+  }
+}));
 
 // Catch-all handler: send back React's index.html file for any non-API routes
-app.get('*', (req, res) => {
+// This should only hit if static middleware didn't serve a file
+app.get('*', (req, res, next) => {
+  // Skip API routes
+  if (req.path.startsWith('/api/')) {
+    return next();
+  }
+  
   const indexPath = join(__dirname, 'dist', 'index.html');
-  console.log(`[server] Serving index.html from: ${indexPath}`);
+  console.log(`[server] Catch-all: Serving index.html for ${req.path}`);
   res.sendFile(indexPath, (err) => {
     if (err) {
       console.error('[server] Error serving index.html:', err);
