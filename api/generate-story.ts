@@ -57,8 +57,13 @@ export default async function handler(req: Request) {
     });
 
     const body = await parseRequestBody(req);
+    console.log('[generate-story] Parsed body:', JSON.stringify(body).substring(0, 200));
+    console.log('[generate-story] Body type:', typeof body);
+    console.log('[generate-story] Body keys:', body ? Object.keys(body) : 'null/undefined');
     const { carPrompt } = body;
-    console.log('[generate-story] Car prompt:', carPrompt?.substring(0, 50));
+    console.log('[generate-story] Car prompt:', carPrompt);
+    console.log('[generate-story] Car prompt type:', typeof carPrompt);
+    console.log('[generate-story] Car prompt truthy?', !!carPrompt);
 
     if (!carPrompt) {
       console.error('[generate-story] Missing carPrompt');

@@ -26,11 +26,31 @@ app.use((req, res, next) => {
 // API Routes
 app.post('/api/generate-story', async (req, res) => {
   try {
+    console.log('[server] Express req.body:', JSON.stringify(req.body));
+    console.log('[server] Express req.body type:', typeof req.body);
+    console.log('[server] Express req.body keys:', req.body ? Object.keys(req.body) : 'null/undefined');
+    console.log('[server] Express req.body.carPrompt:', req.body?.carPrompt);
+    
+    // If Express has already parsed the body, use it directly
+    const bodyString = typeof req.body === 'object' && req.body !== null 
+      ? JSON.stringify(req.body) 
+      : (req.body || '{}');
+    
+    console.log('[server] Body string for Request:', bodyString);
+    
+    // Create headers with explicit Content-Type for JSON body
+    const headers = new Headers(req.headers as any);
+    headers.set('Content-Type', 'application/json');
+    
+    console.log('[server] Request headers:', Object.fromEntries(headers.entries()));
+    
     const request = new Request('http://localhost' + req.url, {
       method: req.method,
-      headers: new Headers(req.headers as any),
-      body: JSON.stringify(req.body),
+      headers: headers,
+      body: bodyString,
     });
+    
+    console.log('[server] Request created, calling handler...');
     const response = await generateStoryHandler(request);
     const body = await response.text();
     res.status(response.status).set(Object.fromEntries(response.headers.entries())).send(body);

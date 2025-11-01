@@ -9,26 +9,41 @@ export async function parseRequestBody(req: Request): Promise<any> {
       hasText: typeof reqAny.text,
       hasBody: 'body' in reqAny,
       bodyType: typeof reqAny.body,
+      bodyValue: typeof reqAny.body === 'string' ? reqAny.body.substring(0, 100) : reqAny.body,
       keys: Object.keys(reqAny).slice(0, 10), // Log first 10 keys
     });
     
-    // Check if body is already parsed (Express-style wrapper)
+    // Try standard Fetch API method first (for Request objects created from Express)
+    // Request objects created with a body string need to be read via json() or text()
+    if (typeof reqAny.json === 'function') {
+      console.log('[utils] Using req.json()');
+      try {
+        const result = await reqAny.json();
+        console.log('[utils] req.json() result:', JSON.stringify(result).substring(0, 200));
+        console.log('[utils] req.json() result keys:', result ? Object.keys(result) : 'null/undefined');
+        return result;
+      } catch (err: any) {
+        console.error('[utils] req.json() failed:', err.message);
+        // Fall through to other methods
+      }
+    }
+    
+    // Check if body is already parsed (Express-style wrapper or custom Request)
     if (reqAny.body !== undefined) {
-      console.log('[utils] Using req.body (already parsed)');
+      console.log('[utils] Found req.body, type:', typeof reqAny.body);
       // If it's already an object/string, return it
-      if (typeof reqAny.body === 'object' && reqAny.body !== null) {
+      if (typeof reqAny.body === 'object' && reqAny.body !== null && !Array.isArray(reqAny.body) && typeof reqAny.body.getReader !== 'function') {
+        console.log('[utils] Returning req.body as object:', JSON.stringify(reqAny.body).substring(0, 100));
         return reqAny.body;
       }
       // If it's a string, parse it
       if (typeof reqAny.body === 'string') {
-        return JSON.parse(reqAny.body);
+        console.log('[utils] Parsing req.body string:', reqAny.body.substring(0, 100));
+        const parsed = JSON.parse(reqAny.body);
+        console.log('[utils] Parsed result keys:', Object.keys(parsed));
+        console.log('[utils] Parsed result carPrompt:', parsed?.carPrompt);
+        return parsed;
       }
-    }
-    
-    // Try standard Fetch API method
-    if (typeof reqAny.json === 'function') {
-      console.log('[utils] Using req.json()');
-      return await reqAny.json();
     }
     
     // Try text method
